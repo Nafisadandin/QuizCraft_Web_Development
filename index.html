@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QuizCraft</title>
+<style>
+    :root {
+    --bg-light: #f4f4f4;
+    --bg-dark: #121212;
+    --text-light: #121212;
+    --text-dark: #f4f4f4;
+    --accent: #4e8cff;
+    }
+
+    body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    transition: all 0.3s ease;
+    }
+
+    .dark-mode {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+    }
+
+    header {
+    background: var(--accent);
+    padding: 1rem;
+    text-align: center;
+    color: white;
+    }
+
+    .container {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: auto;
+    }
+
+    textarea {
+    width: 100%;
+    height: 150px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    }
+
+    .features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    }
+
+    .card {
+    flex: 1 1 300px;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background: white;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+    background: var(--accent);
+    color: white;
+    transform: scale(1.02);
+    }
+
+    .dark-mode .card {
+    background: #1f1f1f;
+    }
+
+    .dark-mode .card:hover {
+    background: #4e8cff;
+    color: white;
+    }
+
+    button {
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    }
+
+    .toggle-mode {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    color: inherit;
+    border: 2px solid currentColor;
+    }
+
+    .output-section {
+    margin-top: 2rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    display: none;
+    }
+
+    @media (max-width: 768px) {
+    .features {
+        flex-direction: column;
+    }
+    }
+</style>
+</head>
+<body>
+<button class="toggle-mode" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+<header>
+    <h1>QuizCraft</h1>
+    <p>Generate MCQs, Summaries, and More from Articles</p>
+</header>
+
+<div class="container">
+    <textarea id="articleInput" placeholder="Paste the article here..."></textarea>
+
+    <div class="features">
+    <div class="card" onclick="generateMCQs()">MCQ Generator</div>
+    <div class="card" onclick="generateFillInTheBlank()">Fill-in-the-Blank</div>
+    <div class="card" onclick="showOutput('summary')">Summary Generator</div>
+    <div class="card" onclick="extractKeyPoints()">Key Point Extractor</div>
+    <div class="card" onclick="showOutput('difficulty')">Difficulty Estimator</div>
+    <div class="card" onclick="textToSpeech()">Text-to-Speech</div>
+    <div class="card" onclick="showOutput('voice')">Voice Article Input</div>
+    <div class="card" onclick="showOutput('topic')">Topic Classifier</div>
+    <div class="card" onclick="showOutput('pdf')">Export as PDF</div>
+    </div>
+
+    <div id="output" class="output-section">
+    <h3 id="output-title">Output</h3>
+    <p id="output-content">Your generated content will appear here based on your selection.</p>
+    </div>
+</div>
+
+<script>
+    function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+    }
+
+    function showOutput(type) {
+    const output = document.getElementById("output");
+    const title = document.getElementById("output-title");
+    const content = document.getElementById("output-content");
+
+    let map = {
+        summary: "This is a summarized version of your article...",
+        difficulty: "The estimated difficulty level is: Intermediate.",
+        voice: "Voice input is ready. Start speaking.",
+        topic: "This article is categorized under: Science.",
+        pdf: "Your content is ready to be exported as a PDF."
+    };
+
+    title.innerText = type.charAt(0).toUpperCase() + type.slice(1);
+    content.innerText = map[type] || "Feature output not defined yet.";
+    output.style.display = "block";
+    }
+
+    function generateFillInTheBlank() {
+    const text = document.getElementById("articleInput").value;
+    const sentences = text.split(/\. |\? |! /);
+    const blanks = sentences.map(sentence => {
+        const words = sentence.trim().split(" ");
+        if (words.length > 4) {
+        const index = Math.floor(words.length / 2);
+        const blank = words[index];
+        words[index] = "_____";
+        return sentence.trim() + "\n" + words.join(" ") + "\n(blank was: " + blank + ")";
+        }
+        return null;
+    }).filter(Boolean).join("\n\n");
+
+    document.getElementById("output-title").innerText = "Fill-in-the-Blank";
+    document.getElementById("output-content").innerText = blanks || "Not enough content to generate questions.";
+    document.getElementById("output").style.display = "block";
+    }
+
+    function extractKeyPoints() {
+    const text = document.getElementById("articleInput").value;
+    const sentences = text.split(/\. |\? |! /);
+    const keywords = ["important", "key", "notable", "essential", "must", "should", "need"];
+
+    const points = sentences.filter(sentence => {
+        return keywords.some(kw => sentence.toLowerCase().includes(kw));
+    });
+
+    const result = points.length > 0 ? "\u2022 " + points.join("\n\u2022 ") : "No clear key points identified.";
+
+    document.getElementById("output-title").innerText = "Key Point Extractor";
+    document.getElementById("output-content").innerText = result;
+    document.getElementById("output").style.display = "block";
+    }
+
+    function generateMCQs() {
+    const text = document.getElementById("articleInput").value;
+    const sentences = text.split(/\. |\? |! /);
+    const questions = sentences.map(sentence => {
+        const words = sentence.trim().split(" ");
+        if (words.length > 5) {
+          const index = Math.floor(Math.random() * words.length);
+        const correct = words[index];
+        words[index] = "_____";
+        const question = words.join(" ");
+        return `Q: ${question}?\nOptions: A) ${correct} B) Option2 C) Option3 D) Option4\nAnswer: ${correct}`;
+        }
+        return null;
+    }).filter(Boolean).join("\n\n");
+
+    document.getElementById("output-title").innerText = "MCQ Generator";
+    document.getElementById("output-content").innerText = questions || "Not enough content to generate MCQs.";
+    document.getElementById("output").style.display = "block";
+    }
+
+    function textToSpeech() {
+    const text = document.getElementById("articleInput").value;
+    if (!text.trim()) {
+        alert("Please enter some text to read.");
+        return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    window.speechSynthesis.speak(utterance);
+
+    document.getElementById("output-title").innerText = "Text-to-Speech";
+    document.getElementById("output-content").innerText = "Reading out loud...";
+    document.getElementById("output").style.display = "block";
+    }
+</script>
+</body>
+</html>
